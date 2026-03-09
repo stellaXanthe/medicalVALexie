@@ -1,3 +1,4 @@
+import { ChatSimulator } from "../components/ChatSimulator";
 import { ContactForm } from "../components/ContactForm";
 
 export default function ContactPage() {
@@ -10,7 +11,10 @@ export default function ContactPage() {
         </p>
       </div>
 
-      <ContactForm />
+      <div className="grid gap-8 lg:grid-cols-2">
+        <ContactForm />
+        <ChatSimulator />
+      </div>
     </section>
   );
 }
