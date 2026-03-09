@@ -4,7 +4,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { ServiceCard } from "../components/ServiceCard";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5235";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5235";
 
 type Service = {
   name: string;
