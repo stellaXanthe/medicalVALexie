@@ -8,6 +8,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument();
 
+// HTTP client for Langflow / external integrations
+builder.Services.AddHttpClient();
+
 // Enable CORS for any origin (demo/testing purposes)
 builder.Services.AddCors(options =>
 {

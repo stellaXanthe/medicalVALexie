@@ -8,26 +8,13 @@ type Message = {
   text: string;
 };
 
-const cannedResponses: Array<{ query: RegExp; response: string }> = [
-  {
-    query: /pricing|cost|rate/i,
-    response:
-      "Our pricing depends on the scope and volume of work. For a quick estimate, tell me what tasks you'd like help with and how many hours per week you expect.",
-  },
-  {
-    query: /hipaa/i,
-    response:
-      "We follow HIPAA guidelines and use secure workflows. All assistants are trained in PHI handling and we recommend using secure portals for protected data.",
-  },
-  {
-    query: /services|support|tasks/i,
-    response:
-      "We can support scheduling, billing follow-up, patient outreach, and more. Share a few examples of what you'd like to offload.",
-  },
-];
-
 const defaultResponse =
   "Thanks for the question! Tell me more about your requirements and I can suggest how our medical VAs can assist.";
+
+const getLangflowUrl = () => {
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5235";
+  return `${base}/api/langflow`;
+};
 
 export function ChatSimulator() {
   const [messages, setMessages] = useState<Message[]>([
@@ -62,19 +49,38 @@ export function ChatSimulator() {
     setInput("");
     setIsThinking(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 850));
+    try {
+      const response = await fetch(getLangflowUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage.text }),
+      });
 
-    const match = cannedResponses.find((item) => item.query.test(userMessage.text));
-    const assistantText = match ? match.response : defaultResponse;
+      if (!response.ok) {
+        throw new Error("Langflow request failed");
+      }
 
-    const assistantMessage: Message = {
-      id: `a-${Date.now()}`,
-      role: "assistant",
-      text: assistantText,
-    };
+      const data = await response.json();
 
-    setMessages((prev) => [...prev, assistantMessage]);
-    setIsThinking(false);
+      const assistantMessage: Message = {
+        id: `a-${Date.now()}`,
+        role: "assistant",
+        text: data?.reply ?? defaultResponse,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Something went wrong.";
+      const assistantMessage: Message = {
+        id: `a-${Date.now()}`,
+        role: "assistant",
+        text: `Unable to reach Langflow: ${errorMessage}`,
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   const handleSubmit = (event: React.FormEvent) => {
