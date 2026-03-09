@@ -1,0 +1,7 @@
+1:"$Sreact.fragment"
+2:I[51111,["/_next/static/chunks/7adaedd9552a3165.js","/_next/static/chunks/38f5dd9a96faf5b3.js","/_next/static/chunks/399e16822121d84c.js"],"ContactForm"]
+3:I[86887,["/_next/static/chunks/7adaedd9552a3165.js","/_next/static/chunks/38f5dd9a96faf5b3.js","/_next/static/chunks/399e16822121d84c.js"],"ChatSimulator"]
+4:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/d2be314c3ece3fbe.js"],"OutletBoundary"]
+5:"$Sreact.suspense"
+0:{"buildId":"WvVjT_63OZVWHZkJW5AFL","rsc":["$","$1","c",{"children":[["$","section",null,{"className":"mx-auto w-full max-w-6xl space-y-8","children":[["$","div",null,{"className":"rounded-3xl bg-white p-10 shadow-sm","children":[["$","h1",null,{"className":"text-3xl font-semibold text-slate-900","children":"Contact Us"}],["$","p",null,{"className":"mt-4 text-slate-600","children":"Have a question or want to explore a custom plan? Send us a message and we’ll respond soon."}]]}],["$","div",null,{"className":"grid gap-8 lg:grid-cols-2","children":[["$","$L2",null,{}],["$","$L3",null,{}]]}]]}],[["$","script","script-0",{"src":"/_next/static/chunks/38f5dd9a96faf5b3.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/399e16822121d84c.js","async":true}]],["$","$L4",null,{"children":["$","$5",null,{"name":"Next.MetadataOutlet","children":"$@6"}]}]]}],"loading":null,"isPartial":false}
+6:null
