@@ -30,6 +30,13 @@ jobs:
         working-directory: frontend
         run: npm run build:export
 
+      - name: Debug PAT secret availability
+        run: |
+          echo "PERSONAL_ACCESS_TOKEN is ${PERSONAL_ACCESS_TOKEN:+set}"
+          echo "Current git user: $(git config --global user.name || echo 'none')"
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
