@@ -2,13 +2,26 @@
 
 import axios from "axios";
 import { useState } from "react";
+import { z } from "zod";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5235";
 
+const inquirySchema = z.object({
+  name: z.string().min(2, "Please enter your name."),
+  email: z.string().email("Please enter a valid email address."),
+  message: z.string().min(10, "Message must be at least 10 characters."),
+});
+
+type InquiryForm = z.infer<typeof inquirySchema>;
+
 export function ContactForm() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+  const [formValues, setFormValues] = useState<InquiryForm>({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof InquiryForm, string>>>({});
   const [status, setStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -17,17 +30,27 @@ export function ContactForm() {
     setStatus("pending");
     setError(null);
 
-    try {
-      await axios.post(`${API_BASE}/api/inquiries`, {
-        name,
-        email,
-        message,
+    const result = inquirySchema.safeParse(formValues);
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof InquiryForm, string>> = {};
+      result.error.issues.forEach((issue) => {
+        if (issue.path[0]) {
+          const key = issue.path[0] as keyof InquiryForm;
+          fieldErrors[key] = issue.message;
+        }
       });
+      setFormErrors(fieldErrors);
+      setStatus("error");
+      return;
+    }
+
+    setFormErrors({});
+
+    try {
+      await axios.post(`${API_BASE}/api/inquiries`, result.data);
 
       setStatus("success");
-      setName("");
-      setEmail("");
-      setMessage("");
+      setFormValues({ name: "", email: "", message: "" });
     } catch (err) {
       setStatus("error");
       setError(
@@ -43,33 +66,36 @@ export function ContactForm() {
       <div>
         <label className="block text-sm font-medium text-slate-700">Name</label>
         <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={formValues.name}
+          onChange={(e) => setFormValues((prev) => ({ ...prev, name: e.target.value }))}
           required
           className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
         />
+        {formErrors.name && <p className="mt-1 text-xs text-rose-600">{formErrors.name}</p>}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-slate-700">Email</label>
         <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={formValues.email}
+          onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
           type="email"
           required
           className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
         />
+        {formErrors.email && <p className="mt-1 text-xs text-rose-600">{formErrors.email}</p>}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-slate-700">Message</label>
         <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          value={formValues.message}
+          onChange={(e) => setFormValues((prev) => ({ ...prev, message: e.target.value }))}
           required
           rows={4}
           className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
         />
+        {formErrors.message && <p className="mt-1 text-xs text-rose-600">{formErrors.message}</p>}
       </div>
 
       <button
@@ -86,11 +112,15 @@ export function ContactForm() {
         </p>
       )}
 
-      {status === "error" && (
+      {status === "error" && formErrors && Object.keys(formErrors).length > 0 ? (
+        <p className="rounded-md bg-rose-50 p-3 text-sm text-rose-700">
+          Please fix the highlighted fields.
+        </p>
+      ) : status === "error" ? (
         <p className="rounded-md bg-rose-50 p-3 text-sm text-rose-700">
           {error ?? "Something went wrong."}
         </p>
-      )}
+      ) : null}
 
       <p className="text-xs text-slate-500">
         We never share your information. Messages are handled by our HIPAA-trained support team.

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeToggle } from "./ThemeToggle";
 
 const links = [
   { href: "/", label: "Home" },
@@ -23,22 +24,25 @@ export function Navbar() {
           <span className="text-lg">Medical VA</span>
         </Link>
 
-        <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
-          {links.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`rounded-md px-3 py-2 transition-colors hover:bg-slate-100 hover:text-slate-900 ${
-                  isActive ? "bg-slate-100 text-slate-900" : ""
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="flex items-center gap-4">
+          <nav className="hidden items-center gap-4 text-sm font-medium text-slate-600 lg:flex">
+            {links.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`rounded-md px-3 py-2 transition-colors hover:bg-slate-100 hover:text-slate-900 ${
+                    isActive ? "bg-slate-100 text-slate-900" : ""
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );
