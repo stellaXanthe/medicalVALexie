@@ -22,6 +22,7 @@ export default function ServicesPage() {
         const response = await axios.get<Service[]>(`${API_BASE}/api/services`);
         setServices(response.data);
       } catch (err) {
+        console.error(err);
         setError("Failed to load services. Please try again later.");
       } finally {
         setLoading(false);

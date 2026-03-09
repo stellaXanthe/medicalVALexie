@@ -67,7 +67,7 @@ export default function Home() {
         <div className="rounded-3xl bg-white p-10 shadow-sm">
           <h2 className="text-2xl font-semibold text-slate-900">Get started quickly</h2>
           <p className="mt-4 text-slate-600">
-            Our team integrates with your existing workflows and software. Reach out and we'll
+            Our team integrates with your existing workflows and software. Reach out and we&apos;ll
             help you scope the right support plan for your practice.
           </p>
         </div>

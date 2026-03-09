@@ -23,7 +23,6 @@ export function ContactForm() {
 
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof InquiryForm, string>>>({});
   const [status, setStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
-  const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   // Automatically clear toast after a few seconds
@@ -36,7 +35,6 @@ export function ContactForm() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setStatus("pending");
-    setError(null);
     setToast(null);
 
     const result = inquirySchema.safeParse(formValues);
@@ -66,7 +64,7 @@ export function ContactForm() {
       const message = axios.isAxiosError(err)
         ? err.response?.data?.message ?? err.message
         : "Something went wrong.";
-      setError(message);
+      console.error(err);
       setToast({ type: "error", message });
     }
   };
