@@ -1,0 +1,49 @@
+name: Deploy Frontend to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build and export static site
+        working-directory: frontend
+        run: npm run build:export
+
+      - name: Debug PAT secret availability
+        run: |
+          echo "PERSONAL_ACCESS_TOKEN is ${PERSONAL_ACCESS_TOKEN:+set}"
+          echo "Current git user: $(git config --global user.name || echo 'none')"
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          # Use a Personal Access Token (PAT) with repo scope so GitHub Actions can push to gh-pages.
+          # Create a secret named PERSONAL_ACCESS_TOKEN in your repo settings and store the PAT there.
+          personal_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          publish_dir: ./frontend/out
+          publish_branch: gh-pages
+          keep_files: false
+
