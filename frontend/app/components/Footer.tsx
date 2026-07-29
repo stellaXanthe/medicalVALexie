@@ -13,3 +13,9 @@ export function Footer() {
     </footer>
   );
 }
+          <span>HIPAA Compliant</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
