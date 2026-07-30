@@ -3,8 +3,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5235";
+import { getApiErrorMessage, getApiUrl } from "../lib/api";
 
 const inquirySchema = z.object({
   name: z.string().min(2, "Please enter your name."),
@@ -54,16 +53,14 @@ export function ContactForm() {
     setFormErrors({});
 
     try {
-      await axios.post(`${API_BASE}/api/inquiries`, result.data);
+      await axios.post(getApiUrl("/api/inquiries"), result.data);
 
       setStatus("success");
       setFormValues({ name: "", email: "", message: "" });
       setToast({ type: "success", message: "Message sent! We'll be in touch shortly." });
     } catch (err) {
       setStatus("error");
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.message ?? err.message
-        : "Something went wrong.";
+      const message = getApiErrorMessage(err);
       console.error(err);
       setToast({ type: "error", message });
     }
@@ -71,38 +68,38 @@ export function ContactForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/70 to-lime-50/70 p-6 shadow-sm dark:border-amber-400/30 dark:from-[#34240d] dark:via-[#24170b] dark:to-[#1d1408]">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Name</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-amber-100/90">Name</label>
           <input
             value={formValues.name}
             onChange={(e) => setFormValues((prev) => ({ ...prev, name: e.target.value }))}
             required
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition-colors focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200/70"
           />
           {formErrors.name && <p className="mt-1 text-xs text-rose-600">{formErrors.name}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Email</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-amber-100/90">Email</label>
           <input
             value={formValues.email}
             onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
             type="email"
             required
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition-colors focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200/70"
           />
           {formErrors.email && <p className="mt-1 text-xs text-rose-600">{formErrors.email}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Message</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-amber-100/90">Message</label>
           <textarea
             value={formValues.message}
             onChange={(e) => setFormValues((prev) => ({ ...prev, message: e.target.value }))}
             required
             rows={4}
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition-colors focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200/70"
           />
           {formErrors.message && <p className="mt-1 text-xs text-rose-600">{formErrors.message}</p>}
         </div>
@@ -110,12 +107,12 @@ export function ContactForm() {
         <button
           type="submit"
           disabled={status === "pending"}
-          className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+          className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_35px_-18px_rgba(249,115,22,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-not-allowed disabled:translate-y-0 disabled:brightness-100 disabled:bg-slate-300"
         >
           {status === "pending" ? "Sending…" : "Send Message"}
         </button>
 
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500 dark:text-amber-100/70">
           We never share your information. Messages are handled by our HIPAA-trained support team.
         </p>
       </form>

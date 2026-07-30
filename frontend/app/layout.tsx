@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Medical VA - HIPAA-Trained Virtual Assistants",
-  description: "HIPAA-trained medical virtual assistants to help with scheduling, billing, and patient communication.",
+  title: "Medical VA - HIPAA-Trained Virtual Assistant",
+  description: "HIPAA-trained medical virtual assistant to help with scheduling, billing, and patient communication.",
 };
 
 export default function RootLayout({

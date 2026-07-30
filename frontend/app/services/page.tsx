@@ -2,9 +2,9 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { BackButton } from "../components/BackButton";
 import { ServiceCard } from "../components/ServiceCard";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5235";
+import { getApiErrorMessage, getApiUrl } from "../lib/api";
 
 type Service = {
   name: string;
@@ -19,11 +19,11 @@ export default function ServicesPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const response = await axios.get<Service[]>(`${API_BASE}/api/services`);
+        const response = await axios.get<Service[]>(getApiUrl("/api/services"));
         setServices(response.data);
       } catch (err) {
         console.error(err);
-        setError("Failed to load services. Please try again later.");
+        setError(getApiErrorMessage(err));
       } finally {
         setLoading(false);
       }
@@ -34,16 +34,17 @@ export default function ServicesPage() {
 
   return (
     <section className="mx-auto w-full max-w-6xl space-y-8">
-      <div className="rounded-3xl bg-white p-10 shadow-sm">
-        <h1 className="text-3xl font-semibold text-slate-900">Services</h1>
-        <p className="mt-4 text-slate-600">
+      <BackButton />
+      <div className="rounded-3xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/70 to-lime-50/70 p-10 shadow-sm dark:border-amber-400/30 dark:from-[#34240d] dark:via-[#24170b] dark:to-[#1d1408]">
+        <h1 className="text-3xl font-semibold text-slate-900 dark:text-amber-50">Services</h1>
+        <p className="mt-4 text-slate-600 dark:text-amber-100/85">
           Our HIPAA-trained virtual assistants are ready to support your workflow in these areas.
         </p>
       </div>
 
       {loading ? (
-        <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
-          <p className="text-slate-600">Loading services…</p>
+        <div className="rounded-3xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/70 to-lime-50/70 p-10 text-center shadow-sm dark:border-amber-400/30 dark:from-[#34240d] dark:via-[#24170b] dark:to-[#1d1408]">
+          <p className="text-slate-600 dark:text-amber-100/85">Loading services…</p>
         </div>
       ) : error ? (
         <div className="rounded-3xl bg-rose-50 p-10 text-center shadow-sm">
