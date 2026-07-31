@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import api from "../../lib/api";   // Correct relative path
+
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjxvVgXQhzg1y7oqH0EkyD4CbMZZ27BzK6ckXL5gzNFk5b2R9gZGmjKWTcIIX_oPBx/exec";
 
 const inquirySchema = z.object({
   name: z.string().min(2, "Please enter your name."),
@@ -51,21 +52,32 @@ export function ContactForm() {
     setFormErrors({});
 
     try {
-      await api.sendContactForm(result.data);
-
-      setStatus("success");
-      setFormValues({ name: "", email: "", message: "" });
-      setToast({
-        type: "success",
-        message: "Message sent! We'll be in touch shortly.",
+      const response = await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: JSON.stringify(result.data),
       });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        setStatus("success");
+        setFormValues({ name: "", email: "", message: "" });
+        setToast({
+          type: "success",
+          message: "Message sent! We'll be in touch shortly.",
+        });
+      } else {
+        throw new Error(data.message || "Failed to send message");
+      }
     } catch (err: any) {
       setStatus("error");
-      const message = api.getApiErrorMessage(err);
       console.error(err);
       setToast({
         type: "error",
-        message: message || "Something went wrong. Please try again.",
+        message: err.message || "Something went wrong. Please try again.",
       });
     } finally {
       setTimeout(() => setStatus("idle"), 1500);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import api from "../../lib/api";   // Fixed relative import
 
 type Message = {
   id: string;
@@ -60,7 +59,14 @@ export function ChatSimulator() {
     setIsThinking(true);
 
     try {
-      const data = await api.sendToLangflow({ message: text });
+      // TODO: Replace with your actual Langflow endpoint if needed
+      const response = await fetch("/api/Langflow", {   // Adjust this URL if needed
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+
+      const data = await response.json();
 
       const assistantMessage: Message = {
         id: nextId("a"),
@@ -70,11 +76,10 @@ export function ChatSimulator() {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      const errorMessage = api.getApiErrorMessage(err);
       const assistantMessage: Message = {
         id: nextId("a"),
         role: "assistant",
-        text: `I'm here to help. ${defaultResponse} ${errorMessage}`,
+        text: `I'm here to help. ${defaultResponse}`,
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } finally {
