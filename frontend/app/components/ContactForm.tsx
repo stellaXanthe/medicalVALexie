@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import api from "@/lib/api";   // Using api service
+import api from "../../../lib/api";   // Relative import (more reliable for build)
 
 const inquirySchema = z.object({
   name: z.string().min(2, "Please enter your name."),
@@ -53,7 +53,7 @@ export function ContactForm() {
     setFormErrors({});
 
     try {
-      // Use api service (which calls Google Apps Script)
+      // Send via Google Apps Script
       await api.sendContactForm(result.data);
 
       setStatus("success");
@@ -71,7 +71,6 @@ export function ContactForm() {
         message: message || "Something went wrong. Please try again.",
       });
     } finally {
-      // Reset status after a short delay
       setTimeout(() => setStatus("idle"), 1500);
     }
   };

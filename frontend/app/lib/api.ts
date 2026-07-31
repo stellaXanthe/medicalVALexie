@@ -17,8 +17,8 @@ export function getApiErrorMessage(err: unknown) {
   return "Something went wrong.";
 }
 
-// Google Apps Script Fallback for Contact Form
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyt0cI0IsBsLvtOh8Rq7Gb_MAGn5_mAlljvNCFOUoCKzghq7M89QBzgY8vsenhHp-KE/exec";
+// ==================== GOOGLE APPS SCRIPT ====================
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjxvVgXQhzg1y7oqH0EkyD4CbMZZ27BzK6ckXL5gzNFk5b2R9gZGmjKWTcIIX_oPBx/exec";
 
 export const sendToGoogleScript = async (data: any) => {
   const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -42,8 +42,10 @@ export const sendToGoogleScript = async (data: any) => {
   return result;
 };
 
+// ============================================================
+
 export const api = {
-  // Existing functions
+  // Existing backend functions
   getInquiries: async () => {
     const response = await axios.get(getApiUrl("/api/Inquiries"));
     return response.data;
