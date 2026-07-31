@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
-
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyt0cI0IsBsLvtOh8Rq7Gb_MAGn5_mAlljvNCFOUoCKzghq7M89QBzgY8vsenhHp-KE/exec";
+import api from "@/lib/api";   // Using api service
 
 const inquirySchema = z.object({
   name: z.string().min(2, "Please enter your name."),
@@ -54,35 +53,25 @@ export function ContactForm() {
     setFormErrors({});
 
     try {
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8", // Important for Google Apps Script
-        },
-        body: JSON.stringify(result.data),
+      // Use api service (which calls Google Apps Script)
+      await api.sendContactForm(result.data);
+
+      setStatus("success");
+      setFormValues({ name: "", email: "", message: "" });
+      setToast({
+        type: "success",
+        message: "Message sent! We'll be in touch shortly.",
       });
-
-      const data = await response.json();
-
-      if (data.status === "success") {
-        setStatus("success");
-        setFormValues({ name: "", email: "", message: "" });
-        setToast({
-          type: "success",
-          message: "Message sent! We'll be in touch shortly.",
-        });
-      } else {
-        throw new Error(data.message || "Failed to send message");
-      }
     } catch (err: any) {
       setStatus("error");
+      const message = api.getApiErrorMessage(err);
       console.error(err);
       setToast({
         type: "error",
-        message: err.message || "Something went wrong. Please try again.",
+        message: message || "Something went wrong. Please try again.",
       });
     } finally {
-      // Reset status after a short delay so button becomes clickable again
+      // Reset status after a short delay
       setTimeout(() => setStatus("idle"), 1500);
     }
   };

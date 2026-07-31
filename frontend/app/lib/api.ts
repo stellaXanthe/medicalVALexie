@@ -17,9 +17,33 @@ export function getApiErrorMessage(err: unknown) {
   return "Something went wrong.";
 }
 
-// Example API functions - Add your own here
+// Google Apps Script Fallback for Contact Form
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyt0cI0IsBsLvtOh8Rq7Gb_MAGn5_mAlljvNCFOUoCKzghq7M89QBzgY8vsenhHp-KE/exec";
+
+export const sendToGoogleScript = async (data: any) => {
+  const response = await fetch(GOOGLE_SCRIPT_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to send message");
+  }
+
+  const result = await response.json();
+
+  if (result.status !== "success") {
+    throw new Error(result.message || "Failed to send message");
+  }
+
+  return result;
+};
+
 export const api = {
-  // Inquiries
+  // Existing functions
   getInquiries: async () => {
     const response = await axios.get(getApiUrl("/api/Inquiries"));
     return response.data;
@@ -30,16 +54,19 @@ export const api = {
     return response.data;
   },
 
-  // Add more endpoints as needed
   getServices: async () => {
     const response = await axios.get(getApiUrl("/api/Services"));
     return response.data;
   },
 
-  // Langflow
   sendToLangflow: async (data: any) => {
     const response = await axios.post(getApiUrl("/api/Langflow"), data);
     return response.data;
+  },
+
+  // Google Script Contact Form (used by ContactForm.tsx)
+  sendContactForm: async (data: any) => {
+    return await sendToGoogleScript(data);
   },
 };
 
