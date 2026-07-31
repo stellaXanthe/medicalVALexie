@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-
-import { getApiUrl } from "../lib/api";
+import api from "@/lib/api";   // ← Updated import
 
 type Message = {
   id: string;
@@ -19,8 +18,6 @@ const suggestedPrompts = [
   "What does onboarding look like?",
   "How do I get started?",
 ];
-
-const getLangflowUrl = () => getApiUrl("/api/langflow");
 
 export function ChatSimulator() {
   const [messages, setMessages] = useState<Message[]>([
@@ -63,17 +60,7 @@ export function ChatSimulator() {
     setIsThinking(true);
 
     try {
-      const response = await fetch(getLangflowUrl(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage.text }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Assistant unavailable (${response.status})`);
-      }
-
-      const data = await response.json();
+      const data = await api.sendToLangflow({ message: text });
 
       const assistantMessage: Message = {
         id: nextId("a"),
@@ -83,7 +70,7 @@ export function ChatSimulator() {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Something went wrong.";
+      const errorMessage = api.getApiErrorMessage(err);
       const assistantMessage: Message = {
         id: nextId("a"),
         role: "assistant",

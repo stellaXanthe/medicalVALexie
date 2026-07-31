@@ -1,9 +1,8 @@
 "use client";
 
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { getApiErrorMessage, getApiUrl } from "../lib/api";
+import api from "@/lib/api";   // ← Updated import
 
 const inquirySchema = z.object({
   name: z.string().min(2, "Please enter your name."),
@@ -53,14 +52,14 @@ export function ContactForm() {
     setFormErrors({});
 
     try {
-      await axios.post(getApiUrl("/api/inquiries"), result.data);
+      await api.createInquiry(result.data);   // ← Updated to use api service
 
       setStatus("success");
       setFormValues({ name: "", email: "", message: "" });
       setToast({ type: "success", message: "Message sent! We'll be in touch shortly." });
     } catch (err) {
       setStatus("error");
-      const message = getApiErrorMessage(err);
+      const message = api.getApiErrorMessage(err);
       console.error(err);
       setToast({ type: "error", message });
     }
