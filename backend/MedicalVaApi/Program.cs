@@ -4,21 +4,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
 // OpenAPI / Swagger (NSwag)
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument();
 
-// HTTP client for Langflow / external integrations
+// HTTP client for external calls (Langflow, etc.)
 builder.Services.AddHttpClient();
 
-// Enable CORS for any origin (demo/testing purposes)
+// CORS Configuration - Allow your Vercel frontend
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins(
+            "https://medical-va-lexie-ns94.vercel.app",           // Main production domain
+            "https://medical-va-lexie-ns94-git-main-stellaxanthes-projects.vercel.app", // Preview branch
+            "http://localhost:3000"                                // Local development
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 });
 
@@ -26,10 +31,14 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+
+// CORS must come before authorization and controllers
+app.UseCors("AllowFrontend");
 
 app.UseOpenApi();
 app.UseSwaggerUi();
+
+app.UseAuthorization();
 
 app.MapControllers();
 
