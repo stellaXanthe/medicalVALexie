@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjxvVgXQhzg1y7oqH0EkyD4CbMZZ27BzK6ckXL5gzNFk5b2R9gZGmjKWTcIIX_oPBx/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNZO1qW-YbWwoU8ZWmV4UT-4NPQ_aYPFBTpBOYfFzjdpW1Lx3lp7yQjuzVZ2Qahuqr/exec";
 
 const inquirySchema = z.object({
   name: z.string().min(2, "Please enter your name."),
