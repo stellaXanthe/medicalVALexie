@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import api from "../../../lib/api";   // Fixed relative import
+import api from "../../lib/api";   // Fixed relative import
 
 type Message = {
   id: string;

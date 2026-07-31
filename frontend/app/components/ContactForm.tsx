@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import api from "../../../lib/api";   // Relative import (more reliable for build)
+import api from "../../lib/api";   // Correct relative path
 
 const inquirySchema = z.object({
   name: z.string().min(2, "Please enter your name."),
@@ -23,7 +23,6 @@ export function ContactForm() {
   const [status, setStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  // Automatically clear toast
   useEffect(() => {
     if (!toast) return;
     const timeout = window.setTimeout(() => setToast(null), 4000);
@@ -35,7 +34,6 @@ export function ContactForm() {
     setStatus("pending");
     setToast(null);
 
-    // Validate form
     const result = inquirySchema.safeParse(formValues);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof InquiryForm, string>> = {};
@@ -53,7 +51,6 @@ export function ContactForm() {
     setFormErrors({});
 
     try {
-      // Send via Google Apps Script
       await api.sendContactForm(result.data);
 
       setStatus("success");
@@ -82,56 +79,38 @@ export function ContactForm() {
         className="space-y-6 rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/70 to-lime-50/70 p-6 shadow-sm dark:border-amber-400/30 dark:from-[#34240d] dark:via-[#24170b] dark:to-[#1d1408]"
       >
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-amber-100/90">
-            Name
-          </label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-amber-100/90">Name</label>
           <input
             value={formValues.name}
-            onChange={(e) =>
-              setFormValues((prev) => ({ ...prev, name: e.target.value }))
-            }
+            onChange={(e) => setFormValues((prev) => ({ ...prev, name: e.target.value }))}
             required
             className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition-colors focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200/70"
           />
-          {formErrors.name && (
-            <p className="mt-1 text-xs text-rose-600">{formErrors.name}</p>
-          )}
+          {formErrors.name && <p className="mt-1 text-xs text-rose-600">{formErrors.name}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-amber-100/90">
-            Email
-          </label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-amber-100/90">Email</label>
           <input
             value={formValues.email}
-            onChange={(e) =>
-              setFormValues((prev) => ({ ...prev, email: e.target.value }))
-            }
+            onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
             type="email"
             required
             className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition-colors focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200/70"
           />
-          {formErrors.email && (
-            <p className="mt-1 text-xs text-rose-600">{formErrors.email}</p>
-          )}
+          {formErrors.email && <p className="mt-1 text-xs text-rose-600">{formErrors.email}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-amber-100/90">
-            Message
-          </label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-amber-100/90">Message</label>
           <textarea
             value={formValues.message}
-            onChange={(e) =>
-              setFormValues((prev) => ({ ...prev, message: e.target.value }))
-            }
+            onChange={(e) => setFormValues((prev) => ({ ...prev, message: e.target.value }))}
             required
             rows={4}
             className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition-colors focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200/70"
           />
-          {formErrors.message && (
-            <p className="mt-1 text-xs text-rose-600">{formErrors.message}</p>
-          )}
+          {formErrors.message && <p className="mt-1 text-xs text-rose-600">{formErrors.message}</p>}
         </div>
 
         <button
@@ -155,9 +134,7 @@ export function ContactForm() {
               : "border border-rose-200 bg-rose-50 text-rose-800"
           }`}
         >
-          <p className="text-sm font-medium">
-            {toast.type === "success" ? "Success" : "Error"}
-          </p>
+          <p className="text-sm font-medium">{toast.type === "success" ? "Success" : "Error"}</p>
           <p className="mt-1 text-sm">{toast.message}</p>
         </div>
       )}
