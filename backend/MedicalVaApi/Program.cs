@@ -4,6 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddHttpClient<MedicalVaApi.Services.IMakeWebhookService, MedicalVaApi.Services.MakeWebhookService>();
 
 // OpenAPI / Swagger (NSwag)
 builder.Services.AddOpenApiDocument();
