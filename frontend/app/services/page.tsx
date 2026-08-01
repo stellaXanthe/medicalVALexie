@@ -13,15 +13,10 @@ type Service = {
 };
 
 const scheduleSlots = ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"];
-const billingMethods = [
-  { value: "debit-credit", label: "Debit / Credit Card" },
-  { value: "gcash", label: "GCash" },
-  { value: "maya", label: "Maya" },
-  { value: "digital-bank", label: "Digital Bank Transfer" },
-  { value: "visa", label: "Visa" },
-  { value: "mastercard", label: "Mastercard" },
-  { value: "paypal", label: "PayPal" },
-  { value: "payoneer", label: "Payoneer" },
+const billingSupportTopics = [
+  { value: "invoice", label: "Invoice help" },
+  { value: "payment", label: "Payment help" },
+  { value: "insurance", label: "Insurance help" },
 ];
 
 function toInputDate(date: Date) {
@@ -143,139 +138,91 @@ function SchedulingWidget() {
   );
 }
 
-function PaymentMethodIcon({ type }: { type: string }) {
-  switch (type) {
-    case "visa":
-      return <span className="text-lg font-semibold text-sky-700">VISA</span>;
-    case "mastercard":
-      return <span className="text-lg font-semibold text-red-600">MC</span>;
-    case "paypal":
-      return <span className="text-lg font-semibold text-blue-700">PayPal</span>;
-    case "payoneer":
-      return <span className="text-lg font-semibold text-emerald-700">P1</span>;
-    case "gcash":
-      return <span className="text-lg font-semibold text-amber-700">GCash</span>;
-    case "maya":
-      return <span className="text-lg font-semibold text-purple-700">Maya</span>;
-    case "digital-bank":
-      return <span className="text-lg font-semibold text-slate-700">Bank</span>;
-    default:
-      return <span className="text-lg font-semibold text-slate-700">Card</span>;
-  }
-}
-
 function BillingWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [amount, setAmount] = useState("150");
-  const [method, setMethod] = useState("visa");
-  const [cardNumber, setCardNumber] = useState("");
+  const [topic, setTopic] = useState("invoice");
+  const [amount, setAmount] = useState("");
   const [payerName, setPayerName] = useState("");
   const [email, setEmail] = useState("");
   const [reference, setReference] = useState("");
+  const [notes, setNotes] = useState("");
   const [confirmation, setConfirmation] = useState<string | null>(null);
-
-  const detectMethodFromNumber = (value: string) => {
-    const normalized = value.replace(/\D/g, "");
-    if (!normalized) return null;
-    if (normalized.startsWith("4")) return "visa";
-    if (normalized.startsWith("5")) return "mastercard";
-    if (normalized.startsWith("9")) return "gcash";
-    if (normalized.startsWith("8")) return "maya";
-    return null;
-  };
-
-  const handleNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setCardNumber(value);
-    const detected = detectMethodFromNumber(value);
-    if (detected) {
-      setMethod(detected);
-    }
-  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    const parsedAmount = Number(amount);
-    if (!payerName.trim() || !email.trim() || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
-      setConfirmation("Please complete your name, email, and amount before submitting.");
+    if (!payerName.trim() || !email.trim()) {
+      setConfirmation("Please share your name and email so we can assist with your billing support needs.");
       return;
     }
 
-    if (!cardNumber.trim()) {
-      setConfirmation("Please enter a card or wallet number before submitting.");
-      return;
-    }
-
-    const methodLabel = billingMethods.find((item) => item.value === method)?.label ?? method;
-    setConfirmation(`Billing request prepared for ${parsedAmount.toFixed(2)} using ${methodLabel}. We’ll review it and confirm the secure payment flow shortly.`);
+    const topicLabel = billingSupportTopics.find((item) => item.value === topic)?.label ?? topic;
+    const amountText = amount.trim() ? ` for ${amount}` : "";
+    setConfirmation(`Billing support note ready for ${topicLabel}${amountText}. We’ll help review invoices, payments, or insurance follow-up next.`);
   };
-
-  const selectedMethodLabel = billingMethods.find((item) => item.value === method)?.label ?? "Payment";
 
   return (
     <div className="mt-5 rounded-[1.25rem] border border-amber-200/70 bg-amber-50/70 p-4 shadow-sm dark:border-amber-400/20 dark:bg-[#2b1f0d]/70">
       {!isOpen ? (
         <div className="space-y-3">
           <p className="text-sm leading-7 text-slate-600 dark:text-amber-100/85">
-            Start a secure billing request and choose a payment option instantly.
+            Need help with an invoice, payment question, or insurance follow-up? Open the billing support assistant and we’ll guide the next step.
           </p>
           <button
             type="button"
             onClick={() => setIsOpen(true)}
             className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
           >
-            Open billing portal
+            Open billing support assistant
           </button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {billingMethods.map((item) => {
-              const isActive = method === item.value;
+          <div className="flex flex-wrap gap-2">
+            {billingSupportTopics.map((item) => {
+              const isActive = topic === item.value;
               return (
                 <button
                   key={item.value}
                   type="button"
-                  onClick={() => setMethod(item.value)}
-                  aria-label={item.label}
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-all duration-200 ${
+                  onClick={() => setTopic(item.value)}
+                  className={`rounded-full border px-3 py-2 text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? "border-amber-500 bg-white shadow-sm dark:bg-[#26190c]"
-                      : "border-amber-200/70 bg-white/70 dark:border-amber-400/20 dark:bg-[#26190c]/70"
+                      ? "border-amber-500 bg-white text-amber-700 shadow-sm dark:bg-[#26190c] dark:text-amber-200"
+                      : "border-amber-200/70 bg-white/70 text-slate-700 dark:border-amber-400/20 dark:bg-[#26190c]/70 dark:text-amber-100/90"
                   }`}
                 >
-                  <PaymentMethodIcon type={item.value} />
+                  {item.label}
                 </button>
               );
             })}
           </div>
 
           <p className="text-sm text-slate-600 dark:text-amber-100/85">
-            Active method: <span className="font-semibold text-slate-900 dark:text-amber-50">{selectedMethodLabel}</span>
+            Choose the area you need help with and we’ll guide the next step.
           </p>
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
-              <span className="mb-2 block">Amount</span>
+              <span className="mb-2 block">Estimated amount</span>
               <input
                 type="number"
                 min="1"
                 step="0.01"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
+                placeholder="150"
                 className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
               />
             </label>
 
             <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
-              <span className="mb-2 block">Card or wallet number</span>
+              <span className="mb-2 block">Invoice or reference</span>
               <input
                 type="text"
-                inputMode="numeric"
-                value={cardNumber}
-                onChange={handleNumberChange}
-                placeholder="4242 4242 4242 4242"
+                value={reference}
+                onChange={(event) => setReference(event.target.value)}
+                placeholder="Invoice # or case note"
                 className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
               />
             </label>
@@ -306,12 +253,12 @@ function BillingWidget() {
           </div>
 
           <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
-            <span className="mb-2 block">Billing note</span>
-            <input
-              type="text"
-              value={reference}
-              onChange={(event) => setReference(event.target.value)}
-              placeholder="Cardholder details or payment note"
+            <span className="mb-2 block">What do you need help with?</span>
+            <textarea
+              rows={3}
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Share the invoice issue, payment concern, or insurance question you want help with."
               className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
             />
           </label>
@@ -320,7 +267,7 @@ function BillingWidget() {
             type="submit"
             className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
           >
-            Submit billing request
+            Start billing support help
           </button>
 
           {confirmation ? (
@@ -361,7 +308,7 @@ export default function ServicesPage() {
       <Reveal as="div" className="rounded-[1.75rem] border border-amber-200/70 bg-white/70 p-8 shadow-[0_24px_80px_-35px_rgba(245,158,11,0.35)] backdrop-blur-xl dark:border-amber-400/20 dark:bg-[#2d1f0d]/80 sm:p-10">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-amber-50 sm:text-4xl">Services</h1>
         <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 dark:text-amber-100/85">
-          Our HIPAA-trained virtual assistants are ready to support your workflow with practical scheduling and billing tools.
+          Our HIPAA-trained virtual assistants are ready to help with invoices, payments, and insurance follow-up so your team can stay focused on care.
         </p>
       </Reveal>
 
@@ -405,7 +352,9 @@ export default function ServicesPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h2 className="text-xl font-semibold text-slate-900 dark:text-amber-50">{service.name}</h2>
-                      <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-amber-100/85">{service.description}</p>
+                      <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-amber-100/85">
+                        Get help with invoices, payments, and insurance questions without having to manage the workflow alone.
+                      </p>
                     </div>
                     <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/15 to-lime-500/15 text-lg text-amber-700 dark:text-amber-200">
                       💳
