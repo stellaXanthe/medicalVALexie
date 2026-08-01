@@ -95,7 +95,7 @@ export function ChatSimulator() {
   const memoizedMessages = useMemo(() => messages, [messages]);
 
   return (
-    <div className="rounded-3xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/70 to-lime-50/70 p-6 shadow-sm dark:border-amber-400/30 dark:from-[#34240d] dark:via-[#24170b] dark:to-[#1d1408]">
+    <div className="rounded-[1.5rem] border border-amber-200/70 bg-white/70 p-6 shadow-sm backdrop-blur-xl dark:border-amber-400/20 dark:bg-[#2b1f0d]/70">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-slate-900 dark:text-amber-50">AI Assistant</h2>
@@ -114,7 +114,7 @@ export function ChatSimulator() {
             key={prompt}
             type="button"
             onClick={() => void sendMessage(prompt)}
-            className="rounded-full border border-amber-200/80 bg-white/80 px-3 py-1.5 text-sm text-slate-700 transition hover:-translate-y-0.5 hover:bg-amber-50 dark:border-amber-400/30 dark:bg-[#26190c] dark:text-amber-50"
+            className="rounded-full border border-amber-200/80 bg-white/80 px-3 py-1.5 text-sm text-slate-700 transition hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-amber-50 dark:border-amber-400/30 dark:bg-[#26190c] dark:text-amber-50"
           >
             {prompt}
           </button>
@@ -137,17 +137,17 @@ export function ChatSimulator() {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
+      <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2 sm:flex-row">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about services, pricing, HIPAA, etc."
-          className="flex-1 rounded-xl border border-amber-200/70 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-sm transition-colors focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/30 dark:bg-[#26190c] dark:text-amber-50"
+          className="flex-1 rounded-2xl border border-amber-200/70 bg-white/90 px-4 py-3.5 text-sm text-slate-900 shadow-sm transition-colors focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/30 dark:bg-[#26190c] dark:text-amber-50"
         />
         <button
           type="submit"
           disabled={isThinking || !input.trim()}
-          className="inline-flex min-w-[88px] items-center justify-center rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_35px_-18px_rgba(249,115,22,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70"
+          className="inline-flex min-h-12 min-w-[88px] items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_35px_-18px_rgba(249,115,22,0.7)] transition-all duration-200 hover:scale-[1.02] hover:brightness-110 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70"
         >
           {isThinking ? "Thinking…" : "Send"}
         </button>

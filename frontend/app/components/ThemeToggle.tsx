@@ -43,13 +43,23 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
-      className={`inline-flex items-center justify-center rounded-full border px-3 py-2 text-sm font-semibold shadow-sm backdrop-blur transition ${
-        theme === "dark"
-          ? "border-amber-300/70 bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 text-white shadow-[0_10px_30px_rgba(249,115,22,0.28)] hover:from-amber-400 hover:via-orange-400 hover:to-lime-400"
-          : "border-amber-200 bg-gradient-to-r from-amber-100 via-yellow-50 to-lime-100 text-slate-900 hover:from-amber-200 hover:via-amber-100 hover:to-lime-200"
-      }`}
+      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-amber-200/80 bg-white/80 text-slate-800 shadow-sm transition-all duration-300 hover:scale-105 hover:bg-amber-50 dark:border-amber-400/30 dark:bg-[#2d1f0d]/80 dark:text-amber-50"
     >
-      {theme === "dark" ? "☀️ Light mode" : "🌙 Dark mode"}
+      <span className="relative inline-flex h-6 w-6 items-center justify-center">
+        <span
+          className={`absolute transition-all duration-300 ${theme === "dark" ? "rotate-90 opacity-0" : "rotate-0 opacity-100"}`}
+          aria-hidden="true"
+        >
+          🌙
+        </span>
+        <span
+          className={`absolute transition-all duration-300 ${theme === "dark" ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"}`}
+          aria-hidden="true"
+        >
+          ☀️
+        </span>
+      </span>
     </button>
   );
 }
