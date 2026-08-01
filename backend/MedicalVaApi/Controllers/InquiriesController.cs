@@ -45,12 +45,22 @@ public class InquiriesController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Post([FromBody] InquiryRequest request)
+    public async Task<IActionResult> Post([FromBody] InquiryRequest request)
     {
         _logger.LogInformation("Received inquiry: {Name} {Email} {Message}", request.Name, request.Email, request.Message);
 
         var inquiry = new Inquiry(Guid.NewGuid(), request.Name, request.Email, request.Message);
         _sampleInquiries.Add(inquiry);
+
+        var payload = new
+        {
+            formType = "contact",
+            name = request.Name,
+            email = request.Email,
+            message = request.Message
+        };
+
+        await SendToGoogleScript(payload);
 
         return CreatedAtAction(nameof(Get), new { id = inquiry.Id }, new InquiryResponse(inquiry.Id, inquiry.Name, inquiry.Email, inquiry.Message, "Thanks! We have received your message and will follow up shortly."));
     }
@@ -60,14 +70,22 @@ public class InquiriesController : ControllerBase
     {
         _logger.LogInformation("Received scheduling request for {Email}", request.Email);
 
+        var preferredDate = !string.IsNullOrWhiteSpace(request.StartTime) && request.StartTime.Contains('T')
+            ? request.StartTime.Split('T')[0]
+            : request.StartTime ?? string.Empty;
+
+        var preferredTime = !string.IsNullOrWhiteSpace(request.StartTime) && request.StartTime.Contains('T')
+            ? request.StartTime.Split('T')[1]
+            : request.EndTime ?? string.Empty;
+
         var payload = new
         {
             formType = "scheduling",
             name = request.Name,
             email = request.Email,
             message = request.Message,
-            preferredDate = request.StartTime,
-            preferredTime = request.EndTime,
+            preferredDate,
+            preferredTime,
             serviceType = request.CalendarProvider
         };
 
