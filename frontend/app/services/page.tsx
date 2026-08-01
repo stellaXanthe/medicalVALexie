@@ -143,13 +143,55 @@ function SchedulingWidget() {
   );
 }
 
+function PaymentMethodIcon({ type }: { type: string }) {
+  switch (type) {
+    case "visa":
+      return <span className="text-lg font-semibold text-sky-700">VISA</span>;
+    case "mastercard":
+      return <span className="text-lg font-semibold text-red-600">MC</span>;
+    case "paypal":
+      return <span className="text-lg font-semibold text-blue-700">PayPal</span>;
+    case "payoneer":
+      return <span className="text-lg font-semibold text-emerald-700">P1</span>;
+    case "gcash":
+      return <span className="text-lg font-semibold text-amber-700">GCash</span>;
+    case "maya":
+      return <span className="text-lg font-semibold text-purple-700">Maya</span>;
+    case "digital-bank":
+      return <span className="text-lg font-semibold text-slate-700">Bank</span>;
+    default:
+      return <span className="text-lg font-semibold text-slate-700">Card</span>;
+  }
+}
+
 function BillingWidget() {
+  const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState("150");
-  const [method, setMethod] = useState(billingMethods[0].value);
+  const [method, setMethod] = useState("visa");
+  const [cardNumber, setCardNumber] = useState("");
   const [payerName, setPayerName] = useState("");
   const [email, setEmail] = useState("");
   const [reference, setReference] = useState("");
   const [confirmation, setConfirmation] = useState<string | null>(null);
+
+  const detectMethodFromNumber = (value: string) => {
+    const normalized = value.replace(/\D/g, "");
+    if (!normalized) return null;
+    if (normalized.startsWith("4")) return "visa";
+    if (normalized.startsWith("5")) return "mastercard";
+    if (normalized.startsWith("9")) return "gcash";
+    if (normalized.startsWith("8")) return "maya";
+    return null;
+  };
+
+  const handleNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setCardNumber(value);
+    const detected = detectMethodFromNumber(value);
+    if (detected) {
+      setMethod(detected);
+    }
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -160,8 +202,8 @@ function BillingWidget() {
       return;
     }
 
-    if (!reference.trim()) {
-      setConfirmation("Please add a payment reference or card/e-wallet identifier.");
+    if (!cardNumber.trim()) {
+      setConfirmation("Please enter a card or wallet number before submitting.");
       return;
     }
 
@@ -169,85 +211,126 @@ function BillingWidget() {
     setConfirmation(`Billing request prepared for ${parsedAmount.toFixed(2)} using ${methodLabel}. We’ll review it and confirm the secure payment flow shortly.`);
   };
 
+  const selectedMethodLabel = billingMethods.find((item) => item.value === method)?.label ?? "Payment";
+
   return (
-    <form onSubmit={handleSubmit} className="mt-5 space-y-4 rounded-[1.25rem] border border-amber-200/70 bg-amber-50/70 p-4 shadow-sm dark:border-amber-400/20 dark:bg-[#2b1f0d]/70">
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
-          <span className="mb-2 block">Amount</span>
-          <input
-            type="number"
-            min="1"
-            step="0.01"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
-          />
-        </label>
-
-        <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
-          <span className="mb-2 block">Payment method</span>
-          <select
-            value={method}
-            onChange={(event) => setMethod(event.target.value)}
-            className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
+    <div className="mt-5 rounded-[1.25rem] border border-amber-200/70 bg-amber-50/70 p-4 shadow-sm dark:border-amber-400/20 dark:bg-[#2b1f0d]/70">
+      {!isOpen ? (
+        <div className="space-y-3">
+          <p className="text-sm leading-7 text-slate-600 dark:text-amber-100/85">
+            Start a secure billing request and choose a payment option instantly.
+          </p>
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
           >
-            {billingMethods.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+            Open billing portal
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {billingMethods.map((item) => {
+              const isActive = method === item.value;
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setMethod(item.value)}
+                  aria-label={item.label}
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-all duration-200 ${
+                    isActive
+                      ? "border-amber-500 bg-white shadow-sm dark:bg-[#26190c]"
+                      : "border-amber-200/70 bg-white/70 dark:border-amber-400/20 dark:bg-[#26190c]/70"
+                  }`}
+                >
+                  <PaymentMethodIcon type={item.value} />
+                </button>
+              );
+            })}
+          </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
-          <span className="mb-2 block">Your name</span>
-          <input
-            type="text"
-            value={payerName}
-            onChange={(event) => setPayerName(event.target.value)}
-            placeholder="Jane Doe"
-            className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
-          />
-        </label>
+          <p className="text-sm text-slate-600 dark:text-amber-100/85">
+            Active method: <span className="font-semibold text-slate-900 dark:text-amber-50">{selectedMethodLabel}</span>
+          </p>
 
-        <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
-          <span className="mb-2 block">Email</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="name@example.com"
-            className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
-          />
-        </label>
-      </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
+              <span className="mb-2 block">Amount</span>
+              <input
+                type="number"
+                min="1"
+                step="0.01"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
+              />
+            </label>
 
-      <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
-        <span className="mb-2 block">Payment reference</span>
-        <input
-          type="text"
-          value={reference}
-          onChange={(event) => setReference(event.target.value)}
-          placeholder="Card last 4 digits, wallet ID, or billing note"
-          className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
-        />
-      </label>
+            <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
+              <span className="mb-2 block">Card or wallet number</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={cardNumber}
+                onChange={handleNumberChange}
+                placeholder="4242 4242 4242 4242"
+                className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
+              />
+            </label>
+          </div>
 
-      <button
-        type="submit"
-        className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
-      >
-        Submit billing request
-      </button>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
+              <span className="mb-2 block">Your name</span>
+              <input
+                type="text"
+                value={payerName}
+                onChange={(event) => setPayerName(event.target.value)}
+                placeholder="Jane Doe"
+                className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
+              />
+            </label>
 
-      {confirmation ? (
-        <p className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-          {confirmation}
-        </p>
-      ) : null}
-    </form>
+            <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
+              <span className="mb-2 block">Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="name@example.com"
+                className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
+              />
+            </label>
+          </div>
+
+          <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
+            <span className="mb-2 block">Billing note</span>
+            <input
+              type="text"
+              value={reference}
+              onChange={(event) => setReference(event.target.value)}
+              placeholder="Cardholder details or payment note"
+              className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
+            />
+          </label>
+
+          <button
+            type="submit"
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
+          >
+            Submit billing request
+          </button>
+
+          {confirmation ? (
+            <p className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+              {confirmation}
+            </p>
+          ) : null}
+        </form>
+      )}
+    </div>
   );
 }
 
