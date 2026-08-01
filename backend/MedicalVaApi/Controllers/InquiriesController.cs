@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalVaApi.Controllers;
@@ -7,10 +9,17 @@ namespace MedicalVaApi.Controllers;
 public class InquiriesController : ControllerBase
 {
     private readonly ILogger<InquiriesController> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _configuration;
 
-    public InquiriesController(ILogger<InquiriesController> logger)
+    public InquiriesController(
+        ILogger<InquiriesController> logger,
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration)
     {
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
     }
 
     private static readonly List<Inquiry> _sampleInquiries = new()
@@ -47,19 +56,71 @@ public class InquiriesController : ControllerBase
     }
 
     [HttpPost("scheduling")]
-    public IActionResult SubmitScheduling([FromBody] SchedulingRequest request)
+    public async Task<IActionResult> SubmitScheduling([FromBody] SchedulingRequest request)
     {
         _logger.LogInformation("Received scheduling request for {Email}", request.Email);
+
+        var payload = new
+        {
+            formType = "scheduling",
+            name = request.Name,
+            email = request.Email,
+            message = request.Message,
+            preferredDate = request.StartTime,
+            preferredTime = request.EndTime,
+            serviceType = request.CalendarProvider
+        };
+
+        await SendToGoogleScript(payload);
 
         return Ok(new SubmissionResponse("Thanks! Your scheduling request has been received. We will send a confirmation message to your email."));
     }
 
     [HttpPost("billing")]
-    public IActionResult SubmitBilling([FromBody] BillingRequest request)
+    public async Task<IActionResult> SubmitBilling([FromBody] BillingRequest request)
     {
         _logger.LogInformation("Received billing support request for {Email}", request.Email);
 
+        var payload = new
+        {
+            formType = "billing",
+            name = request.Name,
+            email = request.Email,
+            message = request.Message,
+            accountRef = request.Reference
+        };
+
+        await SendToGoogleScript(payload);
+
         return Ok(new SubmissionResponse("Thanks! Your billing support request has been received. We will send a confirmation message to your email."));
+    }
+
+    private async Task SendToGoogleScript(object payload)
+    {
+        var scriptUrl = _configuration["GoogleScript:Url"] ?? _configuration["GOOGLE_SCRIPT_URL"];
+
+        if (string.IsNullOrWhiteSpace(scriptUrl))
+        {
+            _logger.LogWarning("GOOGLE_SCRIPT_URL is not configured; skipping email notification.");
+            return;
+        }
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(scriptUrl, content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Google Script email notification failed: {Status} {Body}", response.StatusCode, body);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calling Google Script for email notification");
+        }
     }
 
     [HttpPut("{id:guid}")]
