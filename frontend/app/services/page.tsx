@@ -7,6 +7,21 @@ import { Reveal } from "../components/Reveal";
 import { ServiceCard } from "../components/ServiceCard";
 import { getApiErrorMessage, getApiUrl } from "../lib/api";
 
+const submitWithFeedback = async (url: string, payload: Record<string, unknown>) => {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.message || "Request failed.");
+  }
+
+  return data;
+};
+
 type Service = {
   name: string;
   description: string;
@@ -31,6 +46,8 @@ function SchedulingWidget() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedTime, setSelectedTime] = useState(scheduleSlots[0]);
   const [selectedType, setSelectedType] = useState("support call");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [confirmation, setConfirmation] = useState<string | null>(null);
 
@@ -54,7 +71,7 @@ function SchedulingWidget() {
     }
   }, [selectedDate, selectedTime, visibleSlots]);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     const selectedValue = new Date(`${selectedDate}T${selectedTime}:00`);
@@ -65,7 +82,26 @@ function SchedulingWidget() {
       return;
     }
 
-    setConfirmation(`Scheduled for ${selectedDate} at ${selectedTime} for a ${selectedType}. ${notes ? `Notes: ${notes}` : ""}`.trim());
+    if (!name.trim() || !email.trim()) {
+      setConfirmation("Please share your name and email so we can confirm your scheduling request.");
+      return;
+    }
+
+    try {
+      const response = await submitWithFeedback(getApiUrl("/api/Inquiries/scheduling"), {
+        name,
+        email,
+        message: notes || `Scheduling request for ${selectedType}`,
+        calendarProvider: "google",
+        startTime: `${selectedDate}T${selectedTime}:00`,
+        endTime: `${selectedDate}T${selectedTime}:00`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+
+      setConfirmation(response.confirmationMessage || `Scheduled for ${selectedDate} at ${selectedTime} for a ${selectedType}. We will send a confirmation message to your email.`);
+    } catch (err) {
+      setConfirmation(err instanceof Error ? err.message : "We could not submit your scheduling request right now.");
+    }
   };
 
   return (
@@ -111,6 +147,30 @@ function SchedulingWidget() {
         </select>
       </label>
 
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
+          <span className="mb-2 block">Your name</span>
+          <input
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Jane Doe"
+            className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
+          />
+        </label>
+
+        <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
+          <span className="mb-2 block">Email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="name@example.com"
+            className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
+          />
+        </label>
+      </div>
+
       <label className="text-sm font-medium text-slate-700 dark:text-amber-100/90">
         <span className="mb-2 block">Notes</span>
         <textarea
@@ -146,9 +206,10 @@ function BillingWidget() {
   const [email, setEmail] = useState("");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmation, setConfirmation] = useState<string | null>(null);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!payerName.trim() || !email.trim()) {
@@ -156,9 +217,23 @@ function BillingWidget() {
       return;
     }
 
-    const topicLabel = billingSupportTopics.find((item) => item.value === topic)?.label ?? topic;
-    const amountText = amount.trim() ? ` for ${amount}` : "";
-    setConfirmation(`Billing support note ready for ${topicLabel}${amountText}. We’ll help review invoices, payments, or insurance follow-up next.`);
+    setIsSubmitting(true);
+    try {
+      const response = await submitWithFeedback(getApiUrl("/api/Inquiries/billing"), {
+        name: payerName,
+        email,
+        message: notes || `Billing support request for ${topic}`,
+        reference,
+        amount,
+        topic,
+      });
+
+      setConfirmation(response.confirmationMessage || "Thanks! Your billing support request has been received. We will send a confirmation message to your email.");
+    } catch (err) {
+      setConfirmation(err instanceof Error ? err.message : "We could not submit your billing request right now.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -265,9 +340,10 @@ function BillingWidget() {
 
           <button
             type="submit"
-            className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
+            disabled={isSubmitting}
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-lime-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Start billing support help
+            {isSubmitting ? "Sending…" : "Start billing support help"}
           </button>
 
           {confirmation ? (

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5235").replace(/\/$/, "");
 
 export function getApiUrl(path: string) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;

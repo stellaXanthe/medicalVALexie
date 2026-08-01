@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
-
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNZO1qW-YbWwoU8ZWmV4UT-4NPQ_aYPFBTpBOYfFzjdpW1Lx3lp7yQjuzVZ2Qahuqr/exec";
+import { getApiUrl } from "../lib/api";
 
 const inquirySchema = z.object({
   name: z.string().min(2, "Please enter your name."),
@@ -52,26 +51,26 @@ export function ContactForm() {
     setFormErrors({});
 
     try {
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
+      const response = await fetch(getApiUrl("/api/Inquiries"), {
         method: "POST",
         headers: {
-          "Content-Type": "text/plain;charset=utf-8",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(result.data),
       });
 
       const data = await response.json();
 
-      if (data.status === "success") {
-        setStatus("success");
-        setFormValues({ name: "", email: "", message: "" });
-        setToast({
-          type: "success",
-          message: "Message sent! We'll be in touch shortly.",
-        });
-      } else {
+      if (!response.ok) {
         throw new Error(data.message || "Failed to send message");
       }
+
+      setStatus("success");
+      setFormValues({ name: "", email: "", message: "" });
+      setToast({
+        type: "success",
+        message: data.confirmationMessage || "Message sent! We'll be in touch shortly.",
+      });
     } catch (err: any) {
       setStatus("error");
       console.error(err);
