@@ -18,7 +18,7 @@ export function getApiErrorMessage(err: unknown) {
 }
 
 // ==================== GOOGLE APPS SCRIPT ====================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNZO1qW-YbWwoU8ZWmV4UT-4NPQ_aYPFBTpBOYfFzjdpW1Lx3lp7yQjuzVZ2Qahuqr/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyGNeo6lGk1BR8gbqvyPH6VS4cfWED-o6t1ZnrCHVuglFG2b_E-Hd07kkuH1AjapmOd/exec";
 
 export const sendToGoogleScript = async (data: any) => {
   const response = await fetch(GOOGLE_SCRIPT_URL, {
