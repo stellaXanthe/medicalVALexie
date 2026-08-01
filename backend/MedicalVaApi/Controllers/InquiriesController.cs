@@ -1,4 +1,3 @@
-using MedicalVaApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalVaApi.Controllers;
@@ -8,12 +7,10 @@ namespace MedicalVaApi.Controllers;
 public class InquiriesController : ControllerBase
 {
     private readonly ILogger<InquiriesController> _logger;
-    private readonly IMakeWebhookService _makeWebhookService;
 
-    public InquiriesController(ILogger<InquiriesController> logger, IMakeWebhookService makeWebhookService)
+    public InquiriesController(ILogger<InquiriesController> logger)
     {
         _logger = logger;
-        _makeWebhookService = makeWebhookService;
     }
 
     private static readonly List<Inquiry> _sampleInquiries = new()
@@ -39,71 +36,28 @@ public class InquiriesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Post([FromBody] InquiryRequest request, CancellationToken cancellationToken)
+    public IActionResult Post([FromBody] InquiryRequest request)
     {
         _logger.LogInformation("Received inquiry: {Name} {Email} {Message}", request.Name, request.Email, request.Message);
 
         var inquiry = new Inquiry(Guid.NewGuid(), request.Name, request.Email, request.Message);
         _sampleInquiries.Add(inquiry);
 
-        var payload = new MakeWebhookPayload
-        {
-            InquiryType = "contact",
-            UserEmail = request.Email,
-            UserName = request.Name,
-            OwnerEmail = "owner@yourdomain.com",
-            Subject = "Contact us request",
-            Message = request.Message,
-        };
-
-        await _makeWebhookService.SendAsync(payload, cancellationToken);
-
         return CreatedAtAction(nameof(Get), new { id = inquiry.Id }, new InquiryResponse(inquiry.Id, inquiry.Name, inquiry.Email, inquiry.Message, "Thanks! We have received your message and will follow up shortly."));
     }
 
     [HttpPost("scheduling")]
-    public async Task<IActionResult> SubmitScheduling([FromBody] SchedulingRequest request, CancellationToken cancellationToken)
+    public IActionResult SubmitScheduling([FromBody] SchedulingRequest request)
     {
         _logger.LogInformation("Received scheduling request for {Email}", request.Email);
-
-        var payload = new MakeWebhookPayload
-        {
-            InquiryType = "scheduling",
-            CalendarProvider = request.CalendarProvider ?? "google",
-            UserEmail = request.Email,
-            UserName = request.Name,
-            OwnerEmail = "owner@yourdomain.com",
-            Subject = "Scheduling request",
-            Message = request.Message,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            Timezone = request.Timezone,
-        };
-
-        await _makeWebhookService.SendAsync(payload, cancellationToken);
 
         return Ok(new SubmissionResponse("Thanks! Your scheduling request has been received. We will send a confirmation message to your email."));
     }
 
     [HttpPost("billing")]
-    public async Task<IActionResult> SubmitBilling([FromBody] BillingRequest request, CancellationToken cancellationToken)
+    public IActionResult SubmitBilling([FromBody] BillingRequest request)
     {
         _logger.LogInformation("Received billing support request for {Email}", request.Email);
-
-        var payload = new MakeWebhookPayload
-        {
-            InquiryType = "billing",
-            UserEmail = request.Email,
-            UserName = request.Name,
-            OwnerEmail = "owner@yourdomain.com",
-            Subject = "Billing support request",
-            Message = request.Message,
-            Reference = request.Reference,
-            Amount = request.Amount,
-            Topic = request.Topic,
-        };
-
-        await _makeWebhookService.SendAsync(payload, cancellationToken);
 
         return Ok(new SubmissionResponse("Thanks! Your billing support request has been received. We will send a confirmation message to your email."));
     }
