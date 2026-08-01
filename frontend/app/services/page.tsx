@@ -7,8 +7,6 @@ import { Reveal } from "../components/Reveal";
 import { ServiceCard } from "../components/ServiceCard";
 import { getApiErrorMessage, getApiUrl } from "../lib/api";
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyGNeo6lGk1BR8gbqvyPH6VS4cfWED-o6t1ZnrCHVuglFG2b_E-Hd07kkuH1AjapmOd/exec";
-
 const submitWithFeedback = async (url: string, payload: Record<string, unknown>) => {
   const response = await fetch(url, {
     method: "POST",
@@ -90,17 +88,15 @@ function SchedulingWidget() {
     }
 
     try {
-      const response = await submitWithFeedback(GOOGLE_SCRIPT_URL, {
-        formType: "scheduling",
+      const response = await submitWithFeedback(getApiUrl("/api/Inquiries/scheduling"), {
         name,
         email,
         message: notes || `Scheduling request for ${selectedType}`,
-        preferredDate: selectedDate,
-        preferredTime: selectedTime,
-        serviceType: selectedType,
+        startTime: `${selectedDate}T${selectedTime}:00`,
+        calendarProvider: selectedType,
       });
 
-      if (response.status === "success") {
+      if (response || response.message) {
         setConfirmation(`Scheduled for ${selectedDate} at ${selectedTime} for a ${selectedType}. We have sent your confirmation to ${email}.`);
       } else {
         throw new Error(response.message || "We could not submit your scheduling request right now.");
@@ -225,8 +221,7 @@ function BillingWidget() {
 
     setIsSubmitting(true);
     try {
-      const response = await submitWithFeedback(GOOGLE_SCRIPT_URL, {
-        formType: "billing",
+      const response = await submitWithFeedback(getApiUrl("/api/Inquiries/billing"), {
         name: payerName,
         email,
         message: notes || `Billing support request for ${topic}`,
@@ -235,7 +230,7 @@ function BillingWidget() {
         topic,
       });
 
-      if (response.status === "success") {
+      if (response || response.message) {
         setConfirmation("Thanks! Your billing support request has been received. We have sent a confirmation message to your email.");
       } else {
         throw new Error(response.message || "We could not submit your billing request right now.");

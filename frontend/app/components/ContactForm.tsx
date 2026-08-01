@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
-
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyGNeo6lGk1BR8gbqvyPH6VS4cfWED-o6t1ZnrCHVuglFG2b_E-Hd07kkuH1AjapmOd/exec";
+import { getApiUrl } from "../lib/api";
 
 const inquirySchema = z.object({
   name: z.string().min(2, "Please enter your name."),
@@ -52,20 +51,17 @@ export function ContactForm() {
     setFormErrors({});
 
     try {
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
+      const response = await fetch(getApiUrl("/api/Inquiries"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...result.data,
-          formType: "contact",
-        }),
+        body: JSON.stringify(result.data),
       });
 
       const data = await response.json();
 
-      if (data.status === "success") {
+      if (response.ok) {
         setStatus("success");
         setFormValues({ name: "", email: "", message: "" });
         setToast({
