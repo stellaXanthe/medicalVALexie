@@ -50,10 +50,27 @@ function SchedulingWidget() {
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [confirmation, setConfirmation] = useState<string | null>(null);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+
+  // Fetch booked slots when date changes
+  useEffect(() => {
+    setIsLoadingSlots(true);
+    fetch(getApiUrl(`/api/Inquiries/available-slots?date=${selectedDate}`))
+      .then((res) => res.json())
+      .then((data) => {
+        setBookedSlots(data.bookedSlots || []);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch booked slots:", err);
+        setBookedSlots([]);
+      })
+      .finally(() => setIsLoadingSlots(false));
+  }, [selectedDate]);
 
   const visibleSlots = (() => {
     if (selectedDate !== today) {
-      return scheduleSlots;
+      return scheduleSlots.filter((slot) => !bookedSlots.includes(slot));
     }
 
     const now = new Date();
@@ -61,7 +78,7 @@ function SchedulingWidget() {
       const [hours, minutes] = slot.split(":").map(Number);
       const slotTime = new Date();
       slotTime.setHours(hours, minutes, 0, 0);
-      return slotTime > now;
+      return slotTime > now && !bookedSlots.includes(slot);
     });
   })();
 
@@ -84,6 +101,12 @@ function SchedulingWidget() {
 
     if (!name.trim() || !email.trim()) {
       setConfirmation("Please share your name and email so we can confirm your scheduling request.");
+      return;
+    }
+
+    // Double-check slot availability before submitting
+    if (bookedSlots.includes(selectedTime)) {
+      setConfirmation("This time slot was just booked by another user. Please choose a different time.");
       return;
     }
 
@@ -125,13 +148,26 @@ function SchedulingWidget() {
           <select
             value={selectedTime}
             onChange={(event) => setSelectedTime(event.target.value)}
-            className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
+            disabled={isLoadingSlots}
+            className="w-full rounded-2xl border border-amber-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 disabled:opacity-60 dark:border-amber-400/20 dark:bg-[#26190c]/80 dark:text-amber-50"
           >
-            {visibleSlots.map((slot) => (
-              <option key={slot} value={slot}>
-                {slot}
-              </option>
-            ))}
+            {scheduleSlots.map((slot) => {
+              const isBooked = bookedSlots.includes(slot);
+              const isPastTime = selectedDate === today && (() => {
+                const [hours, minutes] = slot.split(":").map(Number);
+                const slotTime = new Date();
+                slotTime.setHours(hours, minutes, 0, 0);
+                return slotTime <= new Date();
+              })();
+              const isDisabled = isBooked || isPastTime;
+
+              return (
+                <option key={slot} value={slot} disabled={isDisabled}>
+                  {slot}
+                  {isBooked ? " (Booked)" : isPastTime ? " (Past)" : " (Available)"}
+                </option>
+              );
+            })}
           </select>
         </label>
       </div>

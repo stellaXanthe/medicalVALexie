@@ -28,6 +28,8 @@ public class InquiriesController : ControllerBase
         new Inquiry(Guid.NewGuid(), "Bob", "bob@example.com", "How do I reset my password?")
     };
 
+    private static readonly List<ScheduledSlot> _bookedSlots = new();
+
     [HttpGet]
     public ActionResult<IEnumerable<Inquiry>> Get()
     {
@@ -42,6 +44,23 @@ public class InquiriesController : ControllerBase
             return NotFound();
 
         return Ok(inquiry);
+    }
+
+    [HttpGet("available-slots")]
+    public ActionResult<AvailableSlotsResponse> GetAvailableSlots([FromQuery] string date)
+    {
+        if (!DateTime.TryParse(date, out var parsedDate))
+        {
+            return BadRequest(new { message = "Invalid date format. Use YYYY-MM-DD." });
+        }
+
+        var dateStr = parsedDate.ToString("yyyy-MM-dd");
+        var bookedForDate = _bookedSlots
+            .Where(s => s.Date == dateStr)
+            .Select(s => s.Time)
+            .ToList();
+
+        return Ok(new AvailableSlotsResponse(dateStr, bookedForDate));
     }
 
     [HttpPost]
@@ -77,6 +96,17 @@ public class InquiriesController : ControllerBase
         var preferredTime = !string.IsNullOrWhiteSpace(request.StartTime) && request.StartTime.Contains('T')
             ? request.StartTime.Split('T')[1]
             : request.EndTime ?? string.Empty;
+
+        // Check if slot is already booked
+        var isBooked = _bookedSlots.Any(s => s.Date == preferredDate && s.Time == preferredTime);
+        if (isBooked)
+        {
+            return BadRequest(new { message = "This time slot is no longer available. Please choose another time." });
+        }
+
+        // Store the booking
+        var booking = new ScheduledSlot(preferredDate, preferredTime, request.Name, request.Email);
+        _bookedSlots.Add(booking);
 
         var payload = new
         {
@@ -173,4 +203,8 @@ public class InquiriesController : ControllerBase
     public record InquiryResponse(Guid Id, string Name, string Email, string Message, string ConfirmationMessage);
 
     public record SubmissionResponse(string ConfirmationMessage);
+
+    public record ScheduledSlot(string Date, string Time, string Name, string Email);
+
+    public record AvailableSlotsResponse(string Date, List<string> BookedSlots);
 }
