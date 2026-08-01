@@ -13,10 +13,36 @@ const defaultResponse =
 
 const suggestedPrompts = [
   "What services do you offer?",
-  "How does HIPAA compliance work?",
+  "How do I schedule support?",
+  "How do I contact you?",
   "What does onboarding look like?",
-  "How do I get started?",
 ];
+
+function buildLocalReply(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (/(schedule|appointment|book|availability|calendar|reminder|follow-up)/.test(normalized)) {
+    return "I can help coordinate patient scheduling, reminder workflows, and follow-up tasks for your practice. If you’d like to move forward, use the Contact Us page and share what support you need most.";
+  }
+
+  if (/(contact|reach out|get in touch|message|talk|email|question)/.test(normalized)) {
+    return "You can reach out through the Contact Us form on this site. Share your name, email, and what you need help with so we can guide you to the right support plan.";
+  }
+
+  if (/(service|services|offer|what can you do|virtual assistant|support)/.test(normalized)) {
+    return "I can support scheduling, reminder coordination, insurance follow-up, intake support, referral routing, and billing-related administrative tasks for healthcare practices.";
+  }
+
+  if (/(hipaa|compliant|privacy|secure)/.test(normalized)) {
+    return "Yes—HIPAA-aware workflows are built into the support I provide. I can help with secure scheduling, intake, and follow-up processes while keeping privacy front and center.";
+  }
+
+  if (/(onboard|onboarding|start|get started|how do i)/.test(normalized)) {
+    return "Getting started is simple. Share a bit about your practice, the tasks you want help with, and your preferred workflow, and I’ll help you scope the right support plan.";
+  }
+
+  return null;
+}
 
 export function ChatSimulator() {
   const [messages, setMessages] = useState<Message[]>([
@@ -58,9 +84,22 @@ export function ChatSimulator() {
     setInput("");
     setIsThinking(true);
 
+    const localReply = buildLocalReply(text);
+
+    if (localReply) {
+      const assistantMessage: Message = {
+        id: nextId("a"),
+        role: "assistant",
+        text: localReply,
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+      setIsThinking(false);
+      return;
+    }
+
     try {
       // TODO: Replace with your actual Langflow endpoint if needed
-      const response = await fetch("/api/Langflow", {   // Adjust this URL if needed
+      const response = await fetch("/api/Langflow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
